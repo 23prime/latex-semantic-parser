@@ -47,4 +47,26 @@ mod tests {
         assert!(exec("x + y + 1", "1 + x + y").unwrap());
         assert!(exec("x + y + 1", "1 + y + x").unwrap());
     }
+
+    #[test]
+    fn mul_test() {
+        assert!(exec("x * 2", "x * 2").unwrap());
+        assert!(exec("x * y * 2", "x * y * 2").unwrap());
+    }
+
+    #[test]
+    fn mul_falsy_test() {
+        assert!(!exec("x * 2", "x * 3").unwrap());
+        assert!(!exec("x * y * 2", "x * y * 3").unwrap());
+    }
+
+    #[test]
+    fn mul_commutative_test() {
+        assert!(exec("x * 2", "2 * x").unwrap());
+        assert!(exec("x * y * 2", "x * 2 * y").unwrap());
+        assert!(exec("x * y * 2", "y * x * 2").unwrap());
+        assert!(exec("x * y * 2", "y * 2 * x").unwrap());
+        assert!(exec("x * y * 2", "2 * x * y").unwrap());
+        assert!(exec("x * y * 2", "2 * y * x").unwrap());
+    }
 }
