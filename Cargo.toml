@@ -1,0 +1,10 @@
+[package]
+name = "latex-equivalencer"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "latex_equivalencer"
+path = "src/lib.rs"
+
+[dependencies]
