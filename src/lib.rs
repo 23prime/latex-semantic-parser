@@ -49,6 +49,11 @@ mod tests {
     }
 
     #[test]
+    fn add_trim_test() {
+        assert!(exec("x + 1", " x  +  1 ").unwrap());
+    }
+
+    #[test]
     fn mul_test() {
         assert!(exec("x * 2", "x * 2").unwrap());
         assert!(exec("x * y * 2", "x * y * 2").unwrap());
@@ -68,5 +73,10 @@ mod tests {
         assert!(exec("x * y * 2", "y * 2 * x").unwrap());
         assert!(exec("x * y * 2", "2 * x * y").unwrap());
         assert!(exec("x * y * 2", "2 * y * x").unwrap());
+    }
+
+    #[test]
+    fn mul_trim_test() {
+        assert!(exec("x * 2", " x  *  2 ").unwrap());
     }
 }
