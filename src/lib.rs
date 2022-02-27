@@ -1,14 +1,13 @@
-use std::str::FromStr;
-
-mod errors;
-mod formula;
+pub mod errors;
+pub mod formula;
+pub mod operator;
 
 use errors::ParseFormulaError;
 use formula::Formula;
 
 pub fn exec(lhs: &str, rhs: &str) -> Result<bool, ParseFormulaError> {
-    let lhs_formula = Formula::from_str(lhs)?;
-    let rhs_formula = Formula::from_str(rhs)?;
+    let lhs_formula = Formula::parse(lhs)?;
+    let rhs_formula = Formula::parse(rhs)?;
     let result = lhs_formula == rhs_formula;
     return Ok(result);
 }
@@ -25,5 +24,17 @@ mod tests {
     #[test]
     fn false_test() {
         assert!(!exec("foo", "bar").unwrap());
+    }
+
+    #[test]
+    fn plus_test() {
+        assert!(exec("x + 1", "x + 1").unwrap());
+        assert!(exec("x + y + 1", "x + y + 1").unwrap());
+    }
+
+    #[test]
+    fn plus_commutative_test() {
+        assert!(exec("x + 1", "1 + x").unwrap());
+        assert!(exec("x + y + 1", "y + x + 1").unwrap()); // (x + y) + 1 == 1 + (x + y)
     }
 }
