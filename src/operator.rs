@@ -4,7 +4,7 @@ use crate::errors::ParseFormulaError;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
-    Plus,
+    Add,
 }
 
 impl FromStr for Operator {
@@ -12,7 +12,7 @@ impl FromStr for Operator {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "+" => return Ok(Self::Plus),
+            "+" => return Ok(Self::Add),
             _ => return Err(ParseFormulaError),
         }
     }

@@ -27,13 +27,13 @@ mod tests {
     }
 
     #[test]
-    fn plus_test() {
+    fn add_test() {
         assert!(exec("x + 1", "x + 1").unwrap());
         assert!(exec("x + y + 1", "x + y + 1").unwrap());
     }
 
     #[test]
-    fn plus_commutative_test() {
+    fn add_commutative_test() {
         assert!(exec("x + 1", "1 + x").unwrap());
         assert!(exec("x + y + 1", "y + x + 1").unwrap()); // (x + y) + 1 == 1 + (x + y)
     }
