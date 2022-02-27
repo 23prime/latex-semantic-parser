@@ -33,6 +33,12 @@ mod tests {
     }
 
     #[test]
+    fn add_falsy_test() {
+        assert!(!exec("x + 1", "x + 2").unwrap());
+        assert!(!exec("x + y + 1", "x + y + 2").unwrap());
+    }
+
+    #[test]
     fn add_commutative_test() {
         assert!(exec("x + 1", "1 + x").unwrap());
         assert!(exec("x + y + 1", "x + 1 + y").unwrap());
