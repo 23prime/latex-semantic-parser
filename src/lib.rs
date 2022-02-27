@@ -35,6 +35,10 @@ mod tests {
     #[test]
     fn add_commutative_test() {
         assert!(exec("x + 1", "1 + x").unwrap());
-        assert!(exec("x + y + 1", "y + x + 1").unwrap()); // (x + y) + 1 == 1 + (x + y)
+        assert!(exec("x + y + 1", "x + 1 + y").unwrap());
+        assert!(exec("x + y + 1", "y + x + 1").unwrap());
+        assert!(exec("x + y + 1", "y + 1 + x").unwrap());
+        assert!(exec("x + y + 1", "1 + x + y").unwrap());
+        assert!(exec("x + y + 1", "1 + y + x").unwrap());
     }
 }

@@ -1,37 +1,34 @@
 use std::str::FromStr;
 
 use crate::errors::ParseFormulaError;
-use crate::operator::Operator;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialOrd, Ord)]
 pub enum Formula {
     TerminalSymbol(String),
-    Operation {
-        operator: Operator,
-        lhs: Box<Formula>,
-        rhs: Box<Formula>,
-    },
+    Add { formulas: Vec<Formula> },
 }
 
 impl Formula {
     pub fn parse(s: &str) -> Result<Self, ParseFormulaError> {
         let trimmed = s.trim();
         let operator = "+";
-        let splitted = trimmed.rsplitn(2, operator).collect::<Vec<_>>();
+        let mut splitted = trimmed
+            .split(operator)
+            .into_iter()
+            .map(|s| s.trim())
+            .collect::<Vec<_>>();
+        splitted.sort_unstable();
 
         if splitted.len() == 1 {
             return Ok(Formula::TerminalSymbol(trimmed.to_string()));
         }
 
-        if splitted.len() == 2 {
-            return Ok(Formula::Operation {
-                operator: Operator::from_str(operator)?,
-                lhs: Box::new(Self::parse(splitted[1])?),
-                rhs: Box::new(Self::parse(splitted[0])?),
-            });
-        }
-
-        return Err(ParseFormulaError);
+        return Ok(Formula::Add {
+            formulas: splitted
+                .into_iter()
+                .map(|s| Self::parse(s).unwrap())
+                .collect::<Vec<_>>(),
+        });
     }
 }
 
@@ -49,19 +46,8 @@ impl PartialEq for Formula {
             // l == r
             (Self::TerminalSymbol(l), Self::TerminalSymbol(r)) => l == r,
 
-            // l_lhs `l_operator` l_rhs == r_lhs `r_operator` r_rhs
-            (
-                Self::Operation {
-                    operator: l_operator,
-                    lhs: l_lhs,
-                    rhs: l_rhs,
-                },
-                Self::Operation {
-                    operator: r_operator,
-                    lhs: r_lhs,
-                    rhs: r_rhs,
-                },
-            ) => l_operator == r_operator && ((l_lhs == r_lhs && l_rhs == r_rhs) || (l_lhs == r_rhs && l_rhs == r_lhs)),
+            // sum(l_formulas) == sum (r_formulas)
+            (Self::Add { formulas: l_formulas }, Self::Add { formulas: r_formulas }) => l_formulas == r_formulas,
 
             // o.w.
             _ => false,
