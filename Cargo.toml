@@ -8,3 +8,4 @@ name = "latex_equivalencer"
 path = "src/lib.rs"
 
 [dependencies]
+itertools = "0.10.3"

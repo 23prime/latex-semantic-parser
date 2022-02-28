@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use itertools::Itertools;
+
 use crate::errors::ParseFormulaError;
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord)]
@@ -45,9 +47,7 @@ impl Formula {
     }
 
     fn split_by_operator<'a>(s: &'a str, operator: &'a str) -> Vec<&'a str> {
-        let mut result = s.split(operator).into_iter().map(|s| s.trim()).collect::<Vec<_>>();
-        result.sort_unstable();
-        return result;
+        return s.split(operator).into_iter().map(|s| s.trim()).collect::<Vec<_>>();
     }
 }
 
@@ -66,10 +66,14 @@ impl PartialEq for Formula {
             (Self::TerminalSymbol(l), Self::TerminalSymbol(r)) => l == r,
 
             // sum(l_formulas) == sum(r_formulas)
-            (Self::Add { formulas: l_formulas }, Self::Add { formulas: r_formulas }) => l_formulas == r_formulas,
+            (Self::Add { formulas: l_formulas }, Self::Add { formulas: r_formulas }) => {
+                l_formulas.iter().sorted().collect_vec() == r_formulas.iter().sorted().collect_vec()
+            }
 
             // prod(l_formulas) == prod(r_formulas)
-            (Self::Mul { formulas: l_formulas }, Self::Mul { formulas: r_formulas }) => l_formulas == r_formulas,
+            (Self::Mul { formulas: l_formulas }, Self::Mul { formulas: r_formulas }) => {
+                l_formulas.iter().sorted().collect_vec() == r_formulas.iter().sorted().collect_vec()
+            }
 
             // o.w.
             _ => false,
