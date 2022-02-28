@@ -24,10 +24,7 @@ impl Formula {
         }
 
         return Ok(Formula::Add {
-            formulas: splitted
-                .into_iter()
-                .map(|s| Self::parse(s).unwrap())
-                .collect::<Vec<_>>(),
+            formulas: splitted.into_iter().map(|s| Self::parse(s).unwrap()).collect_vec(),
         });
     }
 
@@ -39,15 +36,12 @@ impl Formula {
         }
 
         return Ok(Formula::Mul {
-            formulas: splitted
-                .into_iter()
-                .map(|s| Self::parse(s).unwrap())
-                .collect::<Vec<_>>(),
+            formulas: splitted.into_iter().map(|s| Self::parse(s).unwrap()).collect_vec(),
         });
     }
 
     fn split_by_operator<'a>(s: &'a str, operator: &'a str) -> Vec<&'a str> {
-        return s.split(operator).into_iter().map(|s| s.trim()).collect::<Vec<_>>();
+        return s.split(operator).into_iter().map(|s| s.trim()).collect_vec();
     }
 }
 
