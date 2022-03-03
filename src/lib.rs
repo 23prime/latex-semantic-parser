@@ -27,12 +27,12 @@ mod tests {
 
     #[test]
     fn true_test() {
-        assert!(exec("foo", "foo").unwrap());
+        assert!(exec("x", "x").unwrap());
     }
 
     #[test]
     fn false_test() {
-        assert!(!exec("foo", "bar").unwrap());
+        assert!(!exec("x", "y").unwrap());
     }
 
     #[test]
