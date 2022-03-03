@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use itertools::Itertools;
+use regex::Regex;
 
 use crate::errors::ParseFormulaError;
 
@@ -17,7 +18,8 @@ impl Formula {
     }
 
     fn parse_by_add(s: &str) -> Result<Self, ParseFormulaError> {
-        let splitted = Self::split_by_operator(s, "+");
+        let pattern = Regex::new(r"\+").unwrap();
+        let splitted = Self::split_by_operator(s, &pattern);
 
         if splitted.len() == 1 {
             return Self::parse_by_mul(splitted[0]);
@@ -29,7 +31,8 @@ impl Formula {
     }
 
     fn parse_by_mul(s: &str) -> Result<Self, ParseFormulaError> {
-        let splitted = Self::split_by_operator(s, "*");
+        let pattern = Regex::new(r"\*").unwrap();
+        let splitted = Self::split_by_operator(s, &pattern);
 
         if splitted.len() == 1 {
             return Ok(Formula::TerminalSymbol(splitted[0].to_string()));
@@ -40,8 +43,13 @@ impl Formula {
         });
     }
 
-    fn split_by_operator<'a>(s: &'a str, operator: &'a str) -> Vec<&'a str> {
-        return s.split(operator).into_iter().map(|s| s.trim()).collect_vec();
+    fn split_by_operator<'a>(s: &'a str, pattern: &'a Regex) -> Vec<&'a str> {
+        return pattern
+            .split(s)
+            .into_iter()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .collect_vec();
     }
 }
 
