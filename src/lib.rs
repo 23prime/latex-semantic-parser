@@ -1,13 +1,22 @@
 pub mod errors;
 pub mod formula;
+pub mod logger;
 pub mod operator;
+
+use log::debug;
 
 use errors::ParseFormulaError;
 use formula::Formula;
 
 pub fn exec(lhs: &str, rhs: &str) -> Result<bool, ParseFormulaError> {
+    logger::init();
+
     let lhs_formula = Formula::parse(lhs)?;
+    debug!("Parse lhs => {:?}", lhs_formula);
+
     let rhs_formula = Formula::parse(rhs)?;
+    debug!("Parse rhs => {:?}", rhs_formula);
+
     let result = lhs_formula == rhs_formula;
     return Ok(result);
 }
