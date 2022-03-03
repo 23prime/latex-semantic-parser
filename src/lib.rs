@@ -12,10 +12,8 @@ pub fn exec(lhs: &str, rhs: &str) -> Result<bool, ParseFormulaError> {
     logger::init();
 
     let lhs_formula = Formula::parse(lhs)?;
-    debug!("Parse lhs => {:?}", lhs_formula);
-
     let rhs_formula = Formula::parse(rhs)?;
-    debug!("Parse rhs => {:?}", rhs_formula);
+    debug!("Parse results => {{ lhs => {:?}, rhs => {:?} }}", lhs_formula, rhs_formula);
 
     let result = lhs_formula == rhs_formula;
     return Ok(result);
