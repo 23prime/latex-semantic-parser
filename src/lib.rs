@@ -89,4 +89,10 @@ mod tests {
         assert!(exec("2 * x * y", "2 x y").unwrap());
         assert!(exec("2 * x * y", "2xy").unwrap());
     }
+
+    #[test]
+    fn mix_add_and_mul_test() {
+        assert!(exec("2 * x + 3 * y + 1", "2 * x + 3 * y + 1").unwrap());
+        assert!(exec("2 * x + 3 * y + 1", "3 * y + 2 * x + 1").unwrap());
+    }
 }
