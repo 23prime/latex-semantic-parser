@@ -31,7 +31,7 @@ impl Formula {
     }
 
     fn parse_by_mul(s: &str) -> Result<Self, ParseFormulaError> {
-        let pattern = Regex::new(r"\*").unwrap();
+        let pattern = Regex::new(r"\*| |").unwrap();
         let splitted = Self::split_by_operator(s, &pattern);
 
         if splitted.len() == 1 {
