@@ -51,6 +51,7 @@ mod tests {
     #[test]
     fn add_trim_test() {
         assert!(exec("x + 1", " x  +  1 ").unwrap());
+        assert!(exec("x + 1", "x+1").unwrap());
     }
 
     #[test]
@@ -78,6 +79,7 @@ mod tests {
     #[test]
     fn mul_trim_test() {
         assert!(exec("x * 2", " x  *  2 ").unwrap());
+        assert!(exec("x * 2", "x*2").unwrap());
     }
 
     #[test]
