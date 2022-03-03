@@ -84,9 +84,9 @@ mod tests {
 
     #[test]
     fn mul_abbreviate_test() {
-        assert!(exec("2 x", "2 * x").unwrap());
-        assert!(exec("2 x y", "2 * x * y").unwrap());
-        assert!(exec("2x", "2 * x").unwrap());
-        assert!(exec("2xy", "2 * x * y").unwrap());
+        assert!(exec("2 * x", "2 x").unwrap());
+        assert!(exec("2 * x", "2x").unwrap());
+        assert!(exec("2 * x * y", "2 x y").unwrap());
+        assert!(exec("2 * x * y", "2xy").unwrap());
     }
 }
