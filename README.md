@@ -9,7 +9,9 @@ $ cd /path/to/latex-equivalencer
 $ evcxr
 Welcome to evcxr. For help, type :help
 >> :dep latex_equivalencer = { package = "latex-equivalencer", path = "." }
->> use latex_equivalencer::*
+use latex_equivalencer::*
+use formula::Formula
+>> Formula::parse("x + 1")
 ```
 
 ## Test ##
