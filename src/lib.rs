@@ -13,7 +13,10 @@ pub fn exec(lhs: &str, rhs: &str) -> Result<bool, ParseFormulaError> {
 
     let lhs_formula = Formula::parse(lhs)?;
     let rhs_formula = Formula::parse(rhs)?;
-    debug!("Parse results => {{ lhs => {:?}, rhs => {:?} }}", lhs_formula, rhs_formula);
+    debug!(
+        "Parse results => {{ lhs => {:?}, rhs => {:?} }}",
+        lhs_formula, rhs_formula
+    );
 
     let result = lhs_formula == rhs_formula;
     return Ok(result);
