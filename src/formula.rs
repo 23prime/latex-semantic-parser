@@ -10,46 +10,200 @@ pub enum Formula {
     TS(String), // TerminalSymbol
     Add(Vec<Formula>),
     Mul(Vec<Formula>),
+    Empty,
 }
 
 impl Formula {
+    fn is_empty(&self) -> bool {
+        return matches!(self, Self::Empty);
+    }
+
+    fn is_single_paren(s: &str) -> bool {
+        if !Regex::new(r"^\(.*\)$").unwrap().is_match(s) {
+            return false;
+        }
+
+        let s_end_paren_removed = &s[0..s.len() - 1];
+        let mut paren_open_count = 0;
+
+        for c in s_end_paren_removed.chars() {
+            if c == '(' {
+                paren_open_count += 1;
+            }
+
+            if c == ')' {
+                paren_open_count -= 1;
+            }
+
+            if paren_open_count == 0 {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     pub fn parse(s: &str) -> Result<Self, ParseFormulaError> {
         return Self::parse_by_add(s);
     }
 
     fn parse_by_add(s: &str) -> Result<Self, ParseFormulaError> {
-        let pattern = Regex::new(r"\+").unwrap();
-        let splitted = Self::split_by_operator(s, &pattern);
+        if Self::is_single_paren(s) {
+            return Self::parse(&s[1..s.len() - 1]);
+        }
 
-        if splitted.len() == 1 {
-            return Self::parse_by_mul(splitted[0]);
+        let mut paren_open_count = 0;
+        let mut term = String::new();
+        let mut terms = Vec::new();
+
+        for c in s.chars() {
+            if c == '+' && paren_open_count == 0 {
+                terms.push(term);
+                term = String::new();
+                continue;
+            }
+
+            if c == ')' {
+                // close paren before open
+                if paren_open_count == 0 {
+                    println!("close paren before open => {:?}", s);
+                    return Err(ParseFormulaError);
+                }
+
+                if paren_open_count != 1 {
+                    term.push(c);
+                }
+
+                paren_open_count -= 1;
+                continue;
+            }
+
+            if c == '(' {
+                if paren_open_count != 0 {
+                    term.push(c);
+                }
+
+                paren_open_count += 1;
+                continue;
+            }
+
+            term.push(c);
+        }
+
+        // push last term
+        if !term.is_empty() {
+            terms.push(term.clone());
+        }
+
+        // some paren has not closed
+        if paren_open_count != 0 {
+            println!("some paren has not closed => {:?}", s);
+            return Err(ParseFormulaError);
+        }
+
+        terms = terms
+            .into_iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect_vec();
+
+        if terms.is_empty() {
+            return Ok(Self::Empty);
+        }
+
+        if terms.len() == 1 {
+            return Self::parse_by_mul(&terms[0]);
+        }
+
+        let result_iter = terms.into_iter().map(|s| Self::parse(&s));
+
+        if result_iter.clone().any(|r| r.is_err()) {
+            return Err(ParseFormulaError);
         }
 
         return Ok(Formula::Add(
-            splitted.into_iter().map(|s| Self::parse(s).unwrap()).collect_vec(),
+            result_iter.map(|r| r.unwrap()).filter(|f| !f.is_empty()).collect_vec(),
         ));
     }
 
     fn parse_by_mul(s: &str) -> Result<Self, ParseFormulaError> {
-        let pattern = Regex::new(r"\*| |").unwrap();
-        let splitted = Self::split_by_operator(s, &pattern);
+        if Self::is_single_paren(s) {
+            return Self::parse(&s[1..s.len() - 1]);
+        }
 
-        if splitted.len() == 1 {
-            return Ok(Formula::TS(splitted[0].to_string()));
+        let mut paren_open_count = 0;
+        let mut term = String::new();
+        let mut terms = Vec::new();
+
+        for c in s.chars() {
+            if c == '*' && paren_open_count == 0 {
+                terms.push(term);
+                term = String::new();
+                continue;
+            }
+
+            if c == ')' {
+                // close paren before open
+                if paren_open_count == 0 {
+                    println!("close paren before open => {:?}", s);
+                    return Err(ParseFormulaError);
+                }
+
+                if paren_open_count != 1 {
+                    term.push(c);
+                }
+
+                paren_open_count -= 1;
+                continue;
+            }
+
+            if c == '(' {
+                if paren_open_count != 0 {
+                    term.push(c);
+                }
+
+                paren_open_count += 1;
+                continue;
+            }
+
+            term.push(c);
+        }
+
+        // push last term
+        if !term.is_empty() {
+            terms.push(term.clone());
+        }
+
+        // some paren has not closed
+        if paren_open_count != 0 {
+            println!("some paren has not closed => {:?}", s);
+            return Err(ParseFormulaError);
+        }
+
+        terms = terms
+            .into_iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect_vec();
+
+        if terms.len() == 1 {
+            // for abbreviate
+            if terms[0].len() > 1 {
+                terms = terms[0].split("").map(|s| s.trim().to_string()).collect_vec();
+            } else {
+                return Ok(Formula::TS(terms[0].to_string()));
+            }
+        }
+
+        let result_iter = terms.into_iter().map(|s| Self::parse(&s));
+
+        if result_iter.clone().any(|r| r.is_err()) {
+            return Err(ParseFormulaError);
         }
 
         return Ok(Formula::Mul(
-            splitted.into_iter().map(|s| Self::parse(s).unwrap()).collect_vec(),
+            result_iter.map(|r| r.unwrap()).filter(|f| !f.is_empty()).collect_vec(),
         ));
-    }
-
-    fn split_by_operator<'a>(s: &'a str, pattern: &'a Regex) -> Vec<&'a str> {
-        return pattern
-            .split(s)
-            .into_iter()
-            .map(|s| s.trim())
-            .filter(|s| !s.is_empty())
-            .collect_vec();
     }
 }
 

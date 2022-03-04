@@ -29,6 +29,7 @@ mod tests {
     #[test]
     fn true_test() {
         assert!(exec("x", "x").unwrap());
+        assert!(exec("x", "(x)").unwrap());
     }
 
     #[test]
@@ -39,7 +40,12 @@ mod tests {
     #[test]
     fn add_test() {
         assert!(exec("x + 1", "x + 1").unwrap());
+        assert!(exec("x + 1", "(x + 1)").unwrap());
+        assert!(exec("x + 1", "(x) + (1)").unwrap());
+        assert!(exec("x + 1", "((x) + (1))").unwrap());
         assert!(exec("x + y + 1", "x + y + 1").unwrap());
+        assert!(exec("x + y + 1", "(x + y + 1)").unwrap());
+        assert!(exec("x + y + 1", "(x) + (y) + (1)").unwrap());
     }
 
     #[test]
