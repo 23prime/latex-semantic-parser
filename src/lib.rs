@@ -78,7 +78,17 @@ mod tests {
     #[test]
     fn mul_test() {
         assert!(exec("x * 2", "x * 2").unwrap());
+        assert!(exec("x * 2", "(x * 2)").unwrap());
+        assert!(exec("x * 2", "(x) * (2)").unwrap());
+        assert!(exec("x * 2", "((x) * (2))").unwrap());
         assert!(exec("x * y * 2", "x * y * 2").unwrap());
+        assert!(exec("x * y * 2", "(x * y * 2)").unwrap());
+        assert!(exec("x * y * 2", "(x) * (y) * (2)").unwrap());
+        assert!(exec("x * y * 2", "(x * y) * 2").unwrap());
+        assert!(exec("x * y * 2", "x * (y * 2)").unwrap());
+        assert!(exec("x * y * 2", "((x * y) * 2)").unwrap());
+        assert!(exec("x * y * 2", "(x * (y * 2))").unwrap());
+        assert!(exec("x * y * 2", "((x) * (y) * 2)").unwrap());
     }
 
     #[test]
