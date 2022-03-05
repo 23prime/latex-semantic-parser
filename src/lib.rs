@@ -38,6 +38,19 @@ mod tests {
     }
 
     #[test]
+    fn empty_test() {
+        assert!(exec("", "").unwrap());
+        assert!(exec("", "    ").unwrap());
+    }
+
+    #[test]
+    fn empty_falsy_test() {
+        assert!(!exec("", "x").unwrap());
+        assert!(!exec("", "x + 1").unwrap());
+        assert!(!exec("", "x * 2").unwrap());
+    }
+
+    #[test]
     fn add_test() {
         assert!(exec("x + 1", "x + 1").unwrap());
         assert!(exec("x + 1", "(x + 1)").unwrap());

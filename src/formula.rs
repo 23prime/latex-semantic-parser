@@ -264,6 +264,9 @@ impl Formula {
                 l_formulas.iter().sorted().collect_vec() == r_formulas.iter().sorted().collect_vec()
             }
 
+            // Empty
+            (Self::Empty, Self::Empty) => true,
+
             // o.w.
             _ => false,
         };
