@@ -205,18 +205,51 @@ impl Formula {
             result_iter.map(|r| r.unwrap()).filter(|f| !f.is_empty()).collect_vec(),
         ));
     }
-}
 
-impl FromStr for Formula {
-    type Err = ParseFormulaError;
+    fn expand_paren(self) -> Self {
+        return match self {
+            // Add([Add[x, y], z]) => Add([x, y], z])
+            Self::Add(formulas) => {
+                return Self::Add(Self::expand_add(
+                    formulas.into_iter().map(Self::expand_paren).collect_vec(),
+                ))
+            }
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Self::parse(s);
+            // Mul(Mul[x, y], z]) => Mul([x, y], z])
+            Self::Mul(formulas) => {
+                return Self::Mul(Self::expand_mul(
+                    formulas.into_iter().map(Self::expand_paren).collect_vec(),
+                ))
+            }
+
+            // o.w.
+            _ => self,
+        };
     }
-}
 
-impl PartialEq for Formula {
-    fn eq(&self, other: &Self) -> bool {
+    fn expand_add(selfs: Vec<Self>) -> Vec<Self> {
+        return selfs
+            .into_iter()
+            .map(|f| match f {
+                Self::Add(formulas) => formulas,
+                _ => vec![f],
+            })
+            .flatten()
+            .collect_vec();
+    }
+
+    fn expand_mul(selfs: Vec<Self>) -> Vec<Self> {
+        return selfs
+            .into_iter()
+            .map(|f| match f {
+                Self::Mul(formulas) => formulas,
+                _ => vec![f],
+            })
+            .flatten()
+            .collect_vec();
+    }
+
+    fn eq_without_expand(&self, other: &Self) -> bool {
         return match (self, other) {
             // l == r
             (Self::TS(l), Self::TS(r)) => l == r,
@@ -234,5 +267,159 @@ impl PartialEq for Formula {
             // o.w.
             _ => false,
         };
+    }
+}
+
+impl FromStr for Formula {
+    type Err = ParseFormulaError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        return Self::parse(s);
+    }
+}
+
+impl PartialEq for Formula {
+    fn eq(&self, other: &Self) -> bool {
+        return Self::eq_without_expand(&Self::expand_paren(self.clone()), &Self::expand_paren(other.clone()));
+    }
+}
+
+#[cfg(test)]
+mod expand_tests {
+    use crate::formula::Formula::{self, *};
+
+    #[test]
+    // x == x
+    fn true_test() {
+        assert!(Formula::eq_without_expand(&TS("x".to_string()), &TS("x".to_string())));
+    }
+
+    #[test]
+    // x != y
+    fn false_test() {
+        assert!(!Formula::eq_without_expand(&TS("x".to_string()), &TS("y".to_string())));
+    }
+
+    #[test]
+    // x => x
+    fn no_paren_ts_test() {
+        let input = TS("x".to_string());
+        let expect = input.clone();
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // x + y + 1 => x + y + 1
+    fn no_paren_add_test() {
+        let input = Add(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
+        let expect = input.clone();
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // x y 1 => x y 1
+    fn no_paren_mul_test() {
+        let input = Mul(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
+        let expect = input.clone();
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // 2 x + y => 2 x + y
+    fn no_paren_test() {
+        let input = Add(vec![
+            Mul(vec![TS("2".to_string()), TS("x".to_string())]),
+            TS("y".to_string()),
+        ]);
+        let expect = input.clone();
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // 2 (x + y) + z => 2 (x + y) + z
+    fn not_expand_paren_test() {
+        let input = Add(vec![
+            Mul(vec![
+                TS("2".to_string()),
+                Add(vec![TS("x".to_string()), TS("y".to_string())]),
+            ]),
+            TS("1".to_string()),
+        ]);
+        let expect = input.clone();
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // (x + y) + (a + b) + 1 => x + y + a + b + 1
+    fn expand_add_paren_test() {
+        let input = Add(vec![
+            Add(vec![TS("x".to_string()), TS("y".to_string())]),
+            Add(vec![TS("a".to_string()), TS("b".to_string())]),
+            TS("1".to_string()),
+        ]);
+        let expect = Add(vec![
+            TS("x".to_string()),
+            TS("y".to_string()),
+            TS("a".to_string()),
+            TS("b".to_string()),
+            TS("1".to_string()),
+        ]);
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // ((x + y) + z) + 1 => x + y + z + 1
+    fn expand_recursive_add_paren_test() {
+        let input = Add(vec![
+            Add(vec![
+                Add(vec![TS("x".to_string()), TS("y".to_string())]),
+                TS("z".to_string()),
+            ]),
+            TS("1".to_string()),
+        ]);
+        let expect = Add(vec![
+            TS("x".to_string()),
+            TS("y".to_string()),
+            TS("z".to_string()),
+            TS("1".to_string()),
+        ]);
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // (x y) (a b) 1 => x y a b 1
+    fn expand_mul_paren_test() {
+        let input = Mul(vec![
+            Mul(vec![TS("x".to_string()), TS("y".to_string())]),
+            Mul(vec![TS("a".to_string()), TS("b".to_string())]),
+            TS("1".to_string()),
+        ]);
+        let expect = Mul(vec![
+            TS("x".to_string()),
+            TS("y".to_string()),
+            TS("a".to_string()),
+            TS("b".to_string()),
+            TS("1".to_string()),
+        ]);
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+    }
+
+    #[test]
+    // ((x y) z) 1 => x y z 1
+    fn expand_recursive_mul_paren_test() {
+        let input = Mul(vec![
+            Mul(vec![
+                Mul(vec![TS("x".to_string()), TS("y".to_string())]),
+                TS("z".to_string()),
+            ]),
+            TS("1".to_string()),
+        ]);
+        let expect = Mul(vec![
+            TS("x".to_string()),
+            TS("y".to_string()),
+            TS("z".to_string()),
+            TS("1".to_string()),
+        ]);
+        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
     }
 }

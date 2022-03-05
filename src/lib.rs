@@ -46,6 +46,11 @@ mod tests {
         assert!(exec("x + y + 1", "x + y + 1").unwrap());
         assert!(exec("x + y + 1", "(x + y + 1)").unwrap());
         assert!(exec("x + y + 1", "(x) + (y) + (1)").unwrap());
+        assert!(exec("x + y + 1", "(x + y) + 1").unwrap());
+        assert!(exec("x + y + 1", "x + (y + 1)").unwrap());
+        assert!(exec("x + y + 1", "((x + y) + 1)").unwrap());
+        assert!(exec("x + y + 1", "(x + (y + 1))").unwrap());
+        assert!(exec("x + y + 1", "((x) + (y)) + (1)").unwrap());
     }
 
     #[test]
