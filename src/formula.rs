@@ -234,22 +234,20 @@ impl Formula {
     fn expand_add(selfs: Vec<Self>) -> Vec<Self> {
         return selfs
             .into_iter()
-            .map(|f| match f {
+            .flat_map(|f| match f {
                 Self::Add(formulas) => formulas,
                 _ => vec![f],
             })
-            .flatten()
             .collect_vec();
     }
 
     fn expand_mul(selfs: Vec<Self>) -> Vec<Self> {
         return selfs
             .into_iter()
-            .map(|f| match f {
+            .flat_map(|f| match f {
                 Self::Mul(formulas) => formulas,
                 _ => vec![f],
             })
-            .flatten()
             .collect_vec();
     }
 
