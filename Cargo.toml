@@ -2,6 +2,7 @@
 name = "latex-equivalencer"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.59"
 
 [lib]
 name = "latex_equivalencer"
