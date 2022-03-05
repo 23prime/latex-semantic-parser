@@ -41,6 +41,11 @@ mod tests {
     fn empty_test() {
         assert!(exec("", "").unwrap());
         assert!(exec("", "    ").unwrap());
+        assert!(exec("", "()").unwrap());
+        assert!(exec("", " + ").unwrap());
+        assert!(exec("", "(()+())").unwrap());
+        assert!(exec("", " * ").unwrap());
+        assert!(exec("", "(()())").unwrap());
     }
 
     #[test]

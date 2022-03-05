@@ -186,6 +186,10 @@ impl Formula {
             .filter(|s| !s.is_empty())
             .collect_vec();
 
+        if terms.is_empty() {
+            return Ok(Self::Empty);
+        }
+
         if terms.len() == 1 {
             // for abbreviate
             if terms[0].len() > 1 {
