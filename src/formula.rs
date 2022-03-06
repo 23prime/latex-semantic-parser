@@ -406,8 +406,7 @@ mod parse_tests {
         assert!(Formula::eq_without_expand(&Formula::parse(" + ").unwrap(), &Empty));
         assert!(Formula::eq_without_expand(&Formula::parse("(()+())").unwrap(), &Empty));
         assert!(Formula::eq_without_expand(&Formula::parse(" * ").unwrap(), &Empty));
-        // TODO:
-        // assert!(Formula::eq_without_expand(&Formula::parse("(()())").unwrap(), &Empty));
+        assert!(Formula::eq_without_expand(&Formula::parse("(()())").unwrap(), &Empty));
     }
 
     #[test]

@@ -55,8 +55,7 @@ mod tests {
         assert!(exec("", " + ").unwrap());
         assert!(exec("", "(()+())").unwrap());
         assert!(exec("", " * ").unwrap());
-        // TODO:
-        // assert!(exec("", "(()())").unwrap());
+        assert!(exec("", "(()())").unwrap());
     }
 
     #[test]
