@@ -298,278 +298,281 @@ impl PartialEq for Formula {
 }
 
 #[cfg(test)]
-mod parse_tests {
-    use crate::formula::Formula::{self, *};
+mod tests {
+    #[cfg(test)]
+    mod parse_tests {
+        use crate::formula::Formula::{self, *};
 
-    // helper
-    fn ts(s: &str) -> Formula {
-        return TS(s.to_string());
+        // helper
+        fn ts(s: &str) -> Formula {
+            return TS(s.to_string());
+        }
+
+        #[test]
+        fn empty_test() {
+            assert!(Formula::eq_without_expand(&Formula::parse("").unwrap(), &Empty));
+            assert!(Formula::eq_without_expand(&Formula::parse("    ").unwrap(), &Empty));
+        }
+
+        #[test]
+        fn ts_test() {
+            let input = Formula::parse("x").unwrap();
+            let expect = ts("x");
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn ts_remove_paren_test() {
+            let input = Formula::parse("(x)").unwrap();
+            let expect = ts("x");
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn add_2_terms_test() {
+            let input = Formula::parse("x + 1").unwrap();
+            let expect = Add(vec![ts("x"), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn add_3_terms_test() {
+            let input = Formula::parse("x + y + 1").unwrap();
+            let expect = Add(vec![ts("x"), ts("y"), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn add_trim_test() {
+            let input_no_spaces = Formula::parse("x+1").unwrap();
+            let input_many_spaces = Formula::parse(" x  +  1 ").unwrap();
+            let expect = Add(vec![ts("x"), ts("1")]);
+            assert!(Formula::eq_without_expand(&input_no_spaces, &expect));
+            assert!(Formula::eq_without_expand(&input_many_spaces, &expect));
+        }
+
+        #[test]
+        fn mul_2_terms_test() {
+            let input = Formula::parse("x * 1").unwrap();
+            let expect = Mul(vec![ts("x"), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn mul_3_terms_test() {
+            let input = Formula::parse("x * y * 1").unwrap();
+            let expect = Mul(vec![ts("x"), ts("y"), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn mul_2_terms_abbreviate_test() {
+            let input = Formula::parse("2 x").unwrap();
+            let expect = Mul(vec![ts("2"), ts("x")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn mul_3_terms_abbreviate_test() {
+            let input = Formula::parse("2 x y").unwrap();
+            let expect = Mul(vec![ts("2"), ts("x"), ts("y")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn mul_2_terms_abbreviate_no_spaces_test() {
+            let input = Formula::parse("2x").unwrap();
+            let expect = Mul(vec![ts("2"), ts("x")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn mul_3_terms_abbreviate_no_spaces_test() {
+            let input = Formula::parse("2xy").unwrap();
+            let expect = Mul(vec![ts("2"), ts("x"), ts("y")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn mul_trim_test() {
+            let input_no_spaces = Formula::parse("x*1").unwrap();
+            let input_many_spaces = Formula::parse(" x  *  1 ").unwrap();
+            let expect = Mul(vec![ts("x"), ts("1")]);
+            assert!(Formula::eq_without_expand(&input_no_spaces, &expect));
+            assert!(Formula::eq_without_expand(&input_many_spaces, &expect));
+        }
+
+        #[test]
+        fn empty_paren_test() {
+            assert!(Formula::eq_without_expand(&Formula::parse("()").unwrap(), &Empty));
+            assert!(Formula::eq_without_expand(&Formula::parse(" + ").unwrap(), &Empty));
+            assert!(Formula::eq_without_expand(&Formula::parse("(()+())").unwrap(), &Empty));
+            assert!(Formula::eq_without_expand(&Formula::parse(" * ").unwrap(), &Empty));
+            assert!(Formula::eq_without_expand(&Formula::parse("(()())").unwrap(), &Empty));
+        }
+
+        #[test]
+        fn paren_fail_test() {
+            assert!(Formula::parse("(x").is_err());
+            assert!(Formula::parse("x)").is_err());
+            assert!(Formula::parse(")x(").is_err());
+            assert!(Formula::parse("(x))(").is_err());
+            assert!(Formula::parse("(x + 1))").is_err());
+            assert!(Formula::parse("((x + 1)").is_err());
+        }
+
+        #[test]
+        fn paren_add_test() {
+            let input = Formula::parse("(x + y) + 1").unwrap();
+            let expect = Add(vec![Add(vec![ts("x"), ts("y")]), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn paren_mul_test() {
+            let input = Formula::parse("(x * y) * 1").unwrap();
+            let expect = Mul(vec![Mul(vec![ts("x"), ts("y")]), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
     }
 
-    #[test]
-    fn empty_test() {
-        assert!(Formula::eq_without_expand(&Formula::parse("").unwrap(), &Empty));
-        assert!(Formula::eq_without_expand(&Formula::parse("    ").unwrap(), &Empty));
-    }
+    #[cfg(test)]
+    mod expand_tests {
+        use crate::formula::Formula::{self, *};
 
-    #[test]
-    fn ts_test() {
-        let input = Formula::parse("x").unwrap();
-        let expect = ts("x");
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
+        #[test]
+        // x == x
+        fn true_test() {
+            assert!(Formula::eq_without_expand(&TS("x".to_string()), &TS("x".to_string())));
+        }
 
-    #[test]
-    fn ts_remove_paren_test() {
-        let input = Formula::parse("(x)").unwrap();
-        let expect = ts("x");
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
+        #[test]
+        // x != y
+        fn false_test() {
+            assert!(!Formula::eq_without_expand(&TS("x".to_string()), &TS("y".to_string())));
+        }
 
-    #[test]
-    fn add_2_terms_test() {
-        let input = Formula::parse("x + 1").unwrap();
-        let expect = Add(vec![ts("x"), ts("1")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
+        #[test]
+        // x => x
+        fn no_paren_ts_test() {
+            let input = TS("x".to_string());
+            let expect = input.clone();
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
 
-    #[test]
-    fn add_3_terms_test() {
-        let input = Formula::parse("x + y + 1").unwrap();
-        let expect = Add(vec![ts("x"), ts("y"), ts("1")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
+        #[test]
+        // x + y + 1 => x + y + 1
+        fn no_paren_add_test() {
+            let input = Add(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
+            let expect = input.clone();
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
 
-    #[test]
-    fn add_trim_test() {
-        let input_no_spaces = Formula::parse("x+1").unwrap();
-        let input_many_spaces = Formula::parse(" x  +  1 ").unwrap();
-        let expect = Add(vec![ts("x"), ts("1")]);
-        assert!(Formula::eq_without_expand(&input_no_spaces, &expect));
-        assert!(Formula::eq_without_expand(&input_many_spaces, &expect));
-    }
+        #[test]
+        // x y 1 => x y 1
+        fn no_paren_mul_test() {
+            let input = Mul(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
+            let expect = input.clone();
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
 
-    #[test]
-    fn mul_2_terms_test() {
-        let input = Formula::parse("x * 1").unwrap();
-        let expect = Mul(vec![ts("x"), ts("1")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
+        #[test]
+        // 2 x + y => 2 x + y
+        fn no_paren_test() {
+            let input = Add(vec![
+                Mul(vec![TS("2".to_string()), TS("x".to_string())]),
+                TS("y".to_string()),
+            ]);
+            let expect = input.clone();
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
 
-    #[test]
-    fn mul_3_terms_test() {
-        let input = Formula::parse("x * y * 1").unwrap();
-        let expect = Mul(vec![ts("x"), ts("y"), ts("1")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
+        #[test]
+        // 2 (x + y) + z => 2 (x + y) + z
+        fn not_expand_paren_test() {
+            let input = Add(vec![
+                Mul(vec![
+                    TS("2".to_string()),
+                    Add(vec![TS("x".to_string()), TS("y".to_string())]),
+                ]),
+                TS("1".to_string()),
+            ]);
+            let expect = input.clone();
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
 
-    #[test]
-    fn mul_2_terms_abbreviate_test() {
-        let input = Formula::parse("2 x").unwrap();
-        let expect = Mul(vec![ts("2"), ts("x")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
-
-    #[test]
-    fn mul_3_terms_abbreviate_test() {
-        let input = Formula::parse("2 x y").unwrap();
-        let expect = Mul(vec![ts("2"), ts("x"), ts("y")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
-
-    #[test]
-    fn mul_2_terms_abbreviate_no_spaces_test() {
-        let input = Formula::parse("2x").unwrap();
-        let expect = Mul(vec![ts("2"), ts("x")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
-
-    #[test]
-    fn mul_3_terms_abbreviate_no_spaces_test() {
-        let input = Formula::parse("2xy").unwrap();
-        let expect = Mul(vec![ts("2"), ts("x"), ts("y")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
-
-    #[test]
-    fn mul_trim_test() {
-        let input_no_spaces = Formula::parse("x*1").unwrap();
-        let input_many_spaces = Formula::parse(" x  *  1 ").unwrap();
-        let expect = Mul(vec![ts("x"), ts("1")]);
-        assert!(Formula::eq_without_expand(&input_no_spaces, &expect));
-        assert!(Formula::eq_without_expand(&input_many_spaces, &expect));
-    }
-
-    #[test]
-    fn empty_paren_test() {
-        assert!(Formula::eq_without_expand(&Formula::parse("()").unwrap(), &Empty));
-        assert!(Formula::eq_without_expand(&Formula::parse(" + ").unwrap(), &Empty));
-        assert!(Formula::eq_without_expand(&Formula::parse("(()+())").unwrap(), &Empty));
-        assert!(Formula::eq_without_expand(&Formula::parse(" * ").unwrap(), &Empty));
-        assert!(Formula::eq_without_expand(&Formula::parse("(()())").unwrap(), &Empty));
-    }
-
-    #[test]
-    fn paren_fail_test() {
-        assert!(Formula::parse("(x").is_err());
-        assert!(Formula::parse("x)").is_err());
-        assert!(Formula::parse(")x(").is_err());
-        assert!(Formula::parse("(x))(").is_err());
-        assert!(Formula::parse("(x + 1))").is_err());
-        assert!(Formula::parse("((x + 1)").is_err());
-    }
-
-    #[test]
-    fn paren_add_test() {
-        let input = Formula::parse("(x + y) + 1").unwrap();
-        let expect = Add(vec![Add(vec![ts("x"), ts("y")]), ts("1")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
-
-    #[test]
-    fn paren_mul_test() {
-        let input = Formula::parse("(x * y) * 1").unwrap();
-        let expect = Mul(vec![Mul(vec![ts("x"), ts("y")]), ts("1")]);
-        assert!(Formula::eq_without_expand(&input, &expect));
-    }
-}
-
-#[cfg(test)]
-mod expand_tests {
-    use crate::formula::Formula::{self, *};
-
-    #[test]
-    // x == x
-    fn true_test() {
-        assert!(Formula::eq_without_expand(&TS("x".to_string()), &TS("x".to_string())));
-    }
-
-    #[test]
-    // x != y
-    fn false_test() {
-        assert!(!Formula::eq_without_expand(&TS("x".to_string()), &TS("y".to_string())));
-    }
-
-    #[test]
-    // x => x
-    fn no_paren_ts_test() {
-        let input = TS("x".to_string());
-        let expect = input.clone();
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
-
-    #[test]
-    // x + y + 1 => x + y + 1
-    fn no_paren_add_test() {
-        let input = Add(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
-        let expect = input.clone();
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
-
-    #[test]
-    // x y 1 => x y 1
-    fn no_paren_mul_test() {
-        let input = Mul(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
-        let expect = input.clone();
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
-
-    #[test]
-    // 2 x + y => 2 x + y
-    fn no_paren_test() {
-        let input = Add(vec![
-            Mul(vec![TS("2".to_string()), TS("x".to_string())]),
-            TS("y".to_string()),
-        ]);
-        let expect = input.clone();
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
-
-    #[test]
-    // 2 (x + y) + z => 2 (x + y) + z
-    fn not_expand_paren_test() {
-        let input = Add(vec![
-            Mul(vec![
-                TS("2".to_string()),
+        #[test]
+        // (x + y) + (a + b) + 1 => x + y + a + b + 1
+        fn expand_add_paren_test() {
+            let input = Add(vec![
                 Add(vec![TS("x".to_string()), TS("y".to_string())]),
-            ]),
-            TS("1".to_string()),
-        ]);
-        let expect = input.clone();
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
+                Add(vec![TS("a".to_string()), TS("b".to_string())]),
+                TS("1".to_string()),
+            ]);
+            let expect = Add(vec![
+                TS("x".to_string()),
+                TS("y".to_string()),
+                TS("a".to_string()),
+                TS("b".to_string()),
+                TS("1".to_string()),
+            ]);
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
 
-    #[test]
-    // (x + y) + (a + b) + 1 => x + y + a + b + 1
-    fn expand_add_paren_test() {
-        let input = Add(vec![
-            Add(vec![TS("x".to_string()), TS("y".to_string())]),
-            Add(vec![TS("a".to_string()), TS("b".to_string())]),
-            TS("1".to_string()),
-        ]);
-        let expect = Add(vec![
-            TS("x".to_string()),
-            TS("y".to_string()),
-            TS("a".to_string()),
-            TS("b".to_string()),
-            TS("1".to_string()),
-        ]);
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
-
-    #[test]
-    // ((x + y) + z) + 1 => x + y + z + 1
-    fn expand_recursive_add_paren_test() {
-        let input = Add(vec![
-            Add(vec![
-                Add(vec![TS("x".to_string()), TS("y".to_string())]),
+        #[test]
+        // ((x + y) + z) + 1 => x + y + z + 1
+        fn expand_recursive_add_paren_test() {
+            let input = Add(vec![
+                Add(vec![
+                    Add(vec![TS("x".to_string()), TS("y".to_string())]),
+                    TS("z".to_string()),
+                ]),
+                TS("1".to_string()),
+            ]);
+            let expect = Add(vec![
+                TS("x".to_string()),
+                TS("y".to_string()),
                 TS("z".to_string()),
-            ]),
-            TS("1".to_string()),
-        ]);
-        let expect = Add(vec![
-            TS("x".to_string()),
-            TS("y".to_string()),
-            TS("z".to_string()),
-            TS("1".to_string()),
-        ]);
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
+                TS("1".to_string()),
+            ]);
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
 
-    #[test]
-    // (x y) (a b) 1 => x y a b 1
-    fn expand_mul_paren_test() {
-        let input = Mul(vec![
-            Mul(vec![TS("x".to_string()), TS("y".to_string())]),
-            Mul(vec![TS("a".to_string()), TS("b".to_string())]),
-            TS("1".to_string()),
-        ]);
-        let expect = Mul(vec![
-            TS("x".to_string()),
-            TS("y".to_string()),
-            TS("a".to_string()),
-            TS("b".to_string()),
-            TS("1".to_string()),
-        ]);
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
-    }
-
-    #[test]
-    // ((x y) z) 1 => x y z 1
-    fn expand_recursive_mul_paren_test() {
-        let input = Mul(vec![
-            Mul(vec![
+        #[test]
+        // (x y) (a b) 1 => x y a b 1
+        fn expand_mul_paren_test() {
+            let input = Mul(vec![
                 Mul(vec![TS("x".to_string()), TS("y".to_string())]),
+                Mul(vec![TS("a".to_string()), TS("b".to_string())]),
+                TS("1".to_string()),
+            ]);
+            let expect = Mul(vec![
+                TS("x".to_string()),
+                TS("y".to_string()),
+                TS("a".to_string()),
+                TS("b".to_string()),
+                TS("1".to_string()),
+            ]);
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
+
+        #[test]
+        // ((x y) z) 1 => x y z 1
+        fn expand_recursive_mul_paren_test() {
+            let input = Mul(vec![
+                Mul(vec![
+                    Mul(vec![TS("x".to_string()), TS("y".to_string())]),
+                    TS("z".to_string()),
+                ]),
+                TS("1".to_string()),
+            ]);
+            let expect = Mul(vec![
+                TS("x".to_string()),
+                TS("y".to_string()),
                 TS("z".to_string()),
-            ]),
-            TS("1".to_string()),
-        ]);
-        let expect = Mul(vec![
-            TS("x".to_string()),
-            TS("y".to_string()),
-            TS("z".to_string()),
-            TS("1".to_string()),
-        ]);
-        assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+                TS("1".to_string()),
+            ]);
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
     }
 }
