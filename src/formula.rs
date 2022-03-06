@@ -43,11 +43,19 @@ impl Formula {
         return true;
     }
 
+    fn is_only_paren(s: &str) -> bool {
+        return Regex::new(r"^[\(\)]+$").unwrap().is_match(s);
+    }
+
     pub fn parse(s: &str) -> Result<Self, ParseFormulaError> {
         return Self::parse_by_add(s);
     }
 
     fn parse_by_add(s: &str) -> Result<Self, ParseFormulaError> {
+        if Self::is_only_paren(s) {
+            return Ok(Self::Empty);
+        }
+
         if Self::is_single_paren(s) {
             return Self::parse(&s[1..s.len() - 1]);
         }
@@ -125,6 +133,10 @@ impl Formula {
     }
 
     fn parse_by_mul(s: &str) -> Result<Self, ParseFormulaError> {
+        if Self::is_only_paren(s) {
+            return Ok(Self::Empty);
+        }
+
         if Self::is_single_paren(s) {
             return Self::parse(&s[1..s.len() - 1]);
         }
@@ -400,10 +412,10 @@ mod parse_tests {
 
     #[test]
     fn paren_fail_test() {
-        assert!(Formula::parse("(").is_err());
-        assert!(Formula::parse(")").is_err());
-        assert!(Formula::parse(")(").is_err());
-        assert!(Formula::parse("())(").is_err());
+        assert!(Formula::parse("(x").is_err());
+        assert!(Formula::parse("x)").is_err());
+        assert!(Formula::parse(")x(").is_err());
+        assert!(Formula::parse("(x))(").is_err());
         assert!(Formula::parse("(x + 1))").is_err());
         assert!(Formula::parse("((x + 1)").is_err());
     }

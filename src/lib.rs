@@ -39,10 +39,10 @@ mod tests {
 
     #[test]
     fn parse_fail_test() {
-        assert!(exec("x", "(").is_err());
-        assert!(exec("x", ")").is_err());
-        assert!(exec("x", ")(").is_err());
-        assert!(exec("x", "())(").is_err());
+        assert!(exec("x", "(x").is_err());
+        assert!(exec("x", "x)").is_err());
+        assert!(exec("x", ")x(").is_err());
+        assert!(exec("x", "(x))(").is_err());
         assert!(exec("x", "(x + 1))").is_err());
         assert!(exec("x", "((x + 1)").is_err());
     }
