@@ -299,14 +299,16 @@ impl PartialEq for Formula {
 
 #[cfg(test)]
 mod tests {
+    use crate::formula::Formula::{self, *};
+
+    // helper
+    fn ts(s: &str) -> Formula {
+        return TS(s.to_string());
+    }
+
     #[cfg(test)]
     mod parse_tests {
-        use crate::formula::Formula::{self, *};
-
-        // helper
-        fn ts(s: &str) -> Formula {
-            return TS(s.to_string());
-        }
+        use super::*;
 
         #[test]
         fn empty_test() {
@@ -438,7 +440,7 @@ mod tests {
 
     #[cfg(test)]
     mod expand_tests {
-        use crate::formula::Formula::{self, *};
+        use super::*;
 
         #[test]
         // x == x
