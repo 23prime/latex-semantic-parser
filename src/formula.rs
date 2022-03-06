@@ -445,19 +445,19 @@ mod tests {
         #[test]
         // x == x
         fn true_test() {
-            assert!(Formula::eq_without_expand(&TS("x".to_string()), &TS("x".to_string())));
+            assert!(Formula::eq_without_expand(&ts("x"), &ts("x")));
         }
 
         #[test]
         // x != y
         fn false_test() {
-            assert!(!Formula::eq_without_expand(&TS("x".to_string()), &TS("y".to_string())));
+            assert!(!Formula::eq_without_expand(&ts("x"), &ts("y")));
         }
 
         #[test]
         // x => x
         fn no_paren_ts_test() {
-            let input = TS("x".to_string());
+            let input = ts("x");
             let expect = input.clone();
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
@@ -465,7 +465,7 @@ mod tests {
         #[test]
         // x + y + 1 => x + y + 1
         fn no_paren_add_test() {
-            let input = Add(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
+            let input = Add(vec![ts("x"), ts("y"), ts("1")]);
             let expect = input.clone();
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
@@ -473,7 +473,7 @@ mod tests {
         #[test]
         // x y 1 => x y 1
         fn no_paren_mul_test() {
-            let input = Mul(vec![TS("x".to_string()), TS("y".to_string()), TS("1".to_string())]);
+            let input = Mul(vec![ts("x"), ts("y"), ts("1")]);
             let expect = input.clone();
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
@@ -481,10 +481,7 @@ mod tests {
         #[test]
         // 2 x + y => 2 x + y
         fn no_paren_test() {
-            let input = Add(vec![
-                Mul(vec![TS("2".to_string()), TS("x".to_string())]),
-                TS("y".to_string()),
-            ]);
+            let input = Add(vec![Mul(vec![ts("2"), ts("x")]), ts("y")]);
             let expect = input.clone();
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
@@ -492,13 +489,7 @@ mod tests {
         #[test]
         // 2 (x + y) + z => 2 (x + y) + z
         fn not_expand_paren_test() {
-            let input = Add(vec![
-                Mul(vec![
-                    TS("2".to_string()),
-                    Add(vec![TS("x".to_string()), TS("y".to_string())]),
-                ]),
-                TS("1".to_string()),
-            ]);
+            let input = Add(vec![Mul(vec![ts("2"), Add(vec![ts("x"), ts("y")])]), ts("1")]);
             let expect = input.clone();
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
@@ -506,74 +497,32 @@ mod tests {
         #[test]
         // (x + y) + (a + b) + 1 => x + y + a + b + 1
         fn expand_add_paren_test() {
-            let input = Add(vec![
-                Add(vec![TS("x".to_string()), TS("y".to_string())]),
-                Add(vec![TS("a".to_string()), TS("b".to_string())]),
-                TS("1".to_string()),
-            ]);
-            let expect = Add(vec![
-                TS("x".to_string()),
-                TS("y".to_string()),
-                TS("a".to_string()),
-                TS("b".to_string()),
-                TS("1".to_string()),
-            ]);
+            let input = Add(vec![Add(vec![ts("x"), ts("y")]), Add(vec![ts("a"), ts("b")]), ts("1")]);
+            let expect = Add(vec![ts("x"), ts("y"), ts("a"), ts("b"), ts("1")]);
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
 
         #[test]
         // ((x + y) + z) + 1 => x + y + z + 1
         fn expand_recursive_add_paren_test() {
-            let input = Add(vec![
-                Add(vec![
-                    Add(vec![TS("x".to_string()), TS("y".to_string())]),
-                    TS("z".to_string()),
-                ]),
-                TS("1".to_string()),
-            ]);
-            let expect = Add(vec![
-                TS("x".to_string()),
-                TS("y".to_string()),
-                TS("z".to_string()),
-                TS("1".to_string()),
-            ]);
+            let input = Add(vec![Add(vec![Add(vec![ts("x"), ts("y")]), ts("z")]), ts("1")]);
+            let expect = Add(vec![ts("x"), ts("y"), ts("z"), ts("1")]);
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
 
         #[test]
         // (x y) (a b) 1 => x y a b 1
         fn expand_mul_paren_test() {
-            let input = Mul(vec![
-                Mul(vec![TS("x".to_string()), TS("y".to_string())]),
-                Mul(vec![TS("a".to_string()), TS("b".to_string())]),
-                TS("1".to_string()),
-            ]);
-            let expect = Mul(vec![
-                TS("x".to_string()),
-                TS("y".to_string()),
-                TS("a".to_string()),
-                TS("b".to_string()),
-                TS("1".to_string()),
-            ]);
+            let input = Mul(vec![Mul(vec![ts("x"), ts("y")]), Mul(vec![ts("a"), ts("b")]), ts("1")]);
+            let expect = Mul(vec![ts("x"), ts("y"), ts("a"), ts("b"), ts("1")]);
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
 
         #[test]
         // ((x y) z) 1 => x y z 1
         fn expand_recursive_mul_paren_test() {
-            let input = Mul(vec![
-                Mul(vec![
-                    Mul(vec![TS("x".to_string()), TS("y".to_string())]),
-                    TS("z".to_string()),
-                ]),
-                TS("1".to_string()),
-            ]);
-            let expect = Mul(vec![
-                TS("x".to_string()),
-                TS("y".to_string()),
-                TS("z".to_string()),
-                TS("1".to_string()),
-            ]);
+            let input = Mul(vec![Mul(vec![Mul(vec![ts("x"), ts("y")]), ts("z")]), ts("1")]);
+            let expect = Mul(vec![ts("x"), ts("y"), ts("z"), ts("1")]);
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
     }
