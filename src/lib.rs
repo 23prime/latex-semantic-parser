@@ -82,6 +82,23 @@ mod tests {
     }
 
     #[test]
+    fn sub_test() {
+        assert!(exec("x - 1", "x - 1").unwrap());
+        assert!(exec("x - 1", "(x - 1)").unwrap());
+        assert!(exec("x - 1", "(x) - (1)").unwrap());
+        assert!(exec("x - 1", "((x) - (1))").unwrap());
+        assert!(exec("x - y - 1", "x - y - 1").unwrap());
+        assert!(exec("x - y - 1", "(x - y - 1)").unwrap());
+        assert!(exec("x - y - 1", "(x) - (y) - (1)").unwrap());
+        assert!(exec("x - y - 1", "(x - y) - 1").unwrap());
+        assert!(exec("x - y - 1", "((x - y) - 1)").unwrap());
+        assert!(exec("x - y - 1", "((x) - (y)) - (1)").unwrap());
+        // TODO:
+        // assert!(exec("x - y - 1", "x - (y + 1)").unwrap());
+        // assert!(exec("x - y - 1", "(x - (y + 1))").unwrap());
+    }
+
+    #[test]
     fn add_falsy_test() {
         assert!(!exec("x + 1", "x + 2").unwrap());
         assert!(!exec("x + y + 1", "x + y + 2").unwrap());

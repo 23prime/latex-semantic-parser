@@ -8,6 +8,7 @@ use crate::errors::ParseFormulaError;
 #[derive(Debug, Clone, Eq, PartialOrd, Ord)]
 pub enum Formula {
     TS(String), // TerminalSymbol
+    Neg(Box<Formula>),
     Add(Vec<Formula>),
     Mul(Vec<Formula>),
     Empty,
@@ -65,9 +66,14 @@ impl Formula {
         let mut terms = Vec::new();
 
         for c in s.chars() {
-            if c == '+' && paren_open_count == 0 {
+            if vec!['+', '-'].contains(&c) && paren_open_count == 0 {
                 terms.push(term);
                 term = String::new();
+
+                if c == '-' {
+                    term.push(c)
+                }
+
                 continue;
             }
 
@@ -114,7 +120,11 @@ impl Formula {
         }
 
         if terms.len() == 1 {
-            return Self::parse_by_mul(&terms[0]);
+            if terms[0].starts_with('-') {
+                return Ok(Self::Neg(Box::new(Self::parse_by_mul(terms[0][1..].trim())?)));
+            } else {
+                return Self::parse_by_mul(&terms[0]);
+            }
         }
 
         let result_iter = terms.into_iter().map(|s| Self::parse(&s));
@@ -274,6 +284,9 @@ impl Formula {
                 l_formulas.iter().sorted().collect_vec() == r_formulas.iter().sorted().collect_vec()
             }
 
+            // - l == - r
+            (Self::Neg(l_formula), Self::Neg(r_formula)) => l_formula == r_formula,
+
             // Empty
             (Self::Empty, Self::Empty) => true,
 
@@ -304,6 +317,10 @@ mod tests {
     // helper
     fn ts(s: &str) -> Formula {
         return TS(s.to_string());
+    }
+
+    fn neg(formula: Formula) -> Formula {
+        return Neg(Box::new(formula));
     }
 
     #[cfg(test)]
@@ -351,6 +368,41 @@ mod tests {
             let expect = Add(vec![ts("x"), ts("1")]);
             assert!(Formula::eq_without_expand(&input_no_spaces, &expect));
             assert!(Formula::eq_without_expand(&input_many_spaces, &expect));
+        }
+
+        #[test]
+        fn neg_term_test() {
+            let input = Formula::parse("-1").unwrap();
+            let expect = neg(ts("1"));
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn sub_2_terms_test() {
+            let input = Formula::parse("x - 1").unwrap();
+            let expect = Add(vec![ts("x"), neg(ts("1"))]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn sub_2_neg_terms_test() {
+            let input = Formula::parse("- x - 1").unwrap();
+            let expect = Add(vec![neg(ts("x")), neg(ts("1"))]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn sub_3_terms_test() {
+            let input = Formula::parse("x - y - 1").unwrap();
+            let expect = Add(vec![ts("x"), neg(ts("y")), neg(ts("1"))]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn add_sub_mixed_test() {
+            let input = Formula::parse("x - y + 1").unwrap();
+            let expect = Add(vec![ts("x"), neg(ts("y")), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
         }
 
         #[test]
@@ -427,6 +479,20 @@ mod tests {
         fn paren_add_test() {
             let input = Formula::parse("(x + y) + 1").unwrap();
             let expect = Add(vec![Add(vec![ts("x"), ts("y")]), ts("1")]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn paren_neg_test() {
+            let input = Formula::parse("x + (- y)").unwrap();
+            let expect = Add(vec![ts("x"), neg(ts("y"))]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn paren_sub_test() {
+            let input = Formula::parse("(x - y) - 1").unwrap();
+            let expect = Add(vec![Add(vec![ts("x"), neg(ts("y"))]), neg(ts("1"))]);
             assert!(Formula::eq_without_expand(&input, &expect));
         }
 
