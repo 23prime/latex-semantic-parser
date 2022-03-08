@@ -230,14 +230,22 @@ impl Formula {
 
     fn expand_paren(self) -> Self {
         return match self {
-            // Add([Add[x, y], z]) => Add([x, y], z])
+            // Neg(Neg(x)) => x
+            Self::Neg(boxed_formula) => {
+                return match *boxed_formula {
+                    Self::Neg(inner_boxed_formula) => *inner_boxed_formula,
+                    _ => Self::Neg(boxed_formula),
+                }
+            }
+
+            // Add([Add[x, y], z]) => Add([x, y, z])
             Self::Add(formulas) => {
                 return Self::Add(Self::expand_add(
                     formulas.into_iter().map(Self::expand_paren).collect_vec(),
                 ))
             }
 
-            // Mul(Mul[x, y], z]) => Mul([x, y], z])
+            // Mul(Mul[x, y], z]) => Mul([x, y, z])
             Self::Mul(formulas) => {
                 return Self::Mul(Self::expand_mul(
                     formulas.into_iter().map(Self::expand_paren).collect_vec(),
@@ -529,6 +537,22 @@ mod tests {
         }
 
         #[test]
+        // - x => - x
+        fn no_paren_neg_test() {
+            let input = neg(ts("x"));
+            let expect = input.clone();
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
+
+        #[test]
+        // - (- x) => x
+        fn expand_neg_test() {
+            let input = neg(neg(ts("x")));
+            let expect = ts("x");
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
+
+        #[test]
         // x + y + 1 => x + y + 1
         fn no_paren_add_test() {
             let input = Add(vec![ts("x"), ts("y"), ts("1")]);
@@ -573,6 +597,14 @@ mod tests {
         fn expand_recursive_add_paren_test() {
             let input = Add(vec![Add(vec![Add(vec![ts("x"), ts("y")]), ts("z")]), ts("1")]);
             let expect = Add(vec![ts("x"), ts("y"), ts("z"), ts("1")]);
+            assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
+        }
+
+        #[test]
+        // x - (- y) => x + y
+        fn expand_add_neg_test() {
+            let input = Add(vec![ts("x"), neg(neg(ts("y")))]);
+            let expect = Add(vec![ts("x"), ts("y")]);
             assert!(Formula::eq_without_expand(&Formula::expand_paren(input), &expect));
         }
 

@@ -66,6 +66,15 @@ mod tests {
     }
 
     #[test]
+    fn neg_test() {
+        assert!(exec("- x", "- x").unwrap());
+        assert!(exec("- x", "- (x)").unwrap());
+        assert!(exec("- x", "(- x)").unwrap());
+        assert!(exec("- x", "(- (x))").unwrap());
+        assert!(exec("x", "- (- x)").unwrap());
+    }
+
+    #[test]
     fn add_test() {
         assert!(exec("x + 1", "x + 1").unwrap());
         assert!(exec("x + 1", "(x + 1)").unwrap());
