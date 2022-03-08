@@ -82,23 +82,6 @@ mod tests {
     }
 
     #[test]
-    fn sub_test() {
-        assert!(exec("x - 1", "x - 1").unwrap());
-        assert!(exec("x - 1", "(x - 1)").unwrap());
-        assert!(exec("x - 1", "(x) - (1)").unwrap());
-        assert!(exec("x - 1", "((x) - (1))").unwrap());
-        assert!(exec("x - y - 1", "x - y - 1").unwrap());
-        assert!(exec("x - y - 1", "(x - y - 1)").unwrap());
-        assert!(exec("x - y - 1", "(x) - (y) - (1)").unwrap());
-        assert!(exec("x - y - 1", "(x - y) - 1").unwrap());
-        assert!(exec("x - y - 1", "((x - y) - 1)").unwrap());
-        assert!(exec("x - y - 1", "((x) - (y)) - (1)").unwrap());
-        // TODO:
-        // assert!(exec("x - y - 1", "x - (y + 1)").unwrap());
-        // assert!(exec("x - y - 1", "(x - (y + 1))").unwrap());
-    }
-
-    #[test]
     fn add_falsy_test() {
         assert!(!exec("x + 1", "x + 2").unwrap());
         assert!(!exec("x + y + 1", "x + y + 2").unwrap());
@@ -118,6 +101,51 @@ mod tests {
     fn add_trim_test() {
         assert!(exec("x + 1", " x  +  1 ").unwrap());
         assert!(exec("x + 1", "x+1").unwrap());
+    }
+
+    #[test]
+    fn sub_test() {
+        assert!(exec("x - 1", "x - 1").unwrap());
+        assert!(exec("x - 1", "(x - 1)").unwrap());
+        assert!(exec("x - 1", "(x) - (1)").unwrap());
+        assert!(exec("x - 1", "((x) - (1))").unwrap());
+        assert!(exec("x - y - 1", "x - y - 1").unwrap());
+        assert!(exec("x - y - 1", "(x - y - 1)").unwrap());
+        assert!(exec("x - y - 1", "(x) - (y) - (1)").unwrap());
+        assert!(exec("x - y - 1", "(x - y) - 1").unwrap());
+        assert!(exec("x - y - 1", "((x - y) - 1)").unwrap());
+        assert!(exec("x - y - 1", "((x) - (y)) - (1)").unwrap());
+    }
+
+    #[test]
+    fn sub_falsy_test() {
+        assert!(!exec("x - 1", "x - 2").unwrap());
+        assert!(!exec("x - y - 1", "x - y - 2").unwrap());
+    }
+
+    #[test]
+    fn sub_commutative_test() {
+        assert!(exec("- x - 1", "- 1 - x").unwrap());
+        assert!(exec("- x - y - 1", "- x - 1 - y").unwrap());
+        assert!(exec("- x - y - 1", "- y - x - 1").unwrap());
+        assert!(exec("- x - y - 1", "- y - 1 - x").unwrap());
+        assert!(exec("- x - y - 1", "- 1 - x - y").unwrap());
+        assert!(exec("- x - y - 1", "- 1 - y - x").unwrap());
+    }
+
+    #[test]
+    fn sub_trim_test() {
+        assert!(exec("x - 1", " x  -  1 ").unwrap());
+        assert!(exec("x - 1", "x-1").unwrap());
+    }
+
+    #[test]
+    fn add_sub_mixed_test() {
+        assert!(exec("x - y + 1", "x - y + 1").unwrap());
+        assert!(exec("x - y + 1", "(x - y) + 1").unwrap());
+        assert!(exec("x - y + 1", "(x + 1) - y").unwrap());
+        // TODO:
+        // assert!(exec("x - y + 1", "x - (y - 1)").unwrap());
     }
 
     #[test]
