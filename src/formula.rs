@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use itertools::Itertools;
+use log::{debug, error};
 use regex::Regex;
 
 use crate::errors::ParseFormulaError;
@@ -80,7 +81,7 @@ impl Formula {
             if c == ')' {
                 // close paren before open
                 if paren_depth == 0 {
-                    println!("Add: close paren before open => {:?}", s);
+                    error!("Add: close paren before open => {:?}", s);
                     return Err(ParseFormulaError);
                 }
 
@@ -92,7 +93,7 @@ impl Formula {
             }
 
             term.push(c);
-            println!(
+            debug!(
                 "Add: c => {:?}, term => {:?}, paren_depth => {:?}",
                 c, term, paren_depth
             );
@@ -105,7 +106,7 @@ impl Formula {
 
         // some paren has not closed
         if paren_depth != 0 {
-            println!("Add: some paren has not closed => {:?}", s);
+            error!("Add: some paren has not closed => {:?}", s);
             return Err(ParseFormulaError);
         }
 
@@ -165,7 +166,7 @@ impl Formula {
             if c == ')' {
                 // close paren before open
                 if paren_depth == 0 {
-                    println!("Mul: close paren before open => {:?}", s);
+                    error!("Mul: close paren before open => {:?}", s);
                     return Err(ParseFormulaError);
                 }
 
@@ -177,7 +178,7 @@ impl Formula {
             }
 
             term.push(c);
-            println!(
+            debug!(
                 "Mul: c => {:?}, term => {:?}, paren_depth => {:?}",
                 c, term, paren_depth
             );
@@ -190,7 +191,7 @@ impl Formula {
 
         // some paren has not closed
         if paren_depth != 0 {
-            println!("Mul: some paren has not closed => {:?}", s);
+            error!("Mul: some paren has not closed => {:?}", s);
             return Err(ParseFormulaError);
         }
 
