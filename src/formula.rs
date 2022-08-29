@@ -25,18 +25,18 @@ impl Formula {
         }
 
         let s_end_paren_removed = &s[0..s.len() - 1];
-        let mut paren_open_count = 0;
+        let mut paren_depth = 0;
 
         for c in s_end_paren_removed.chars() {
             if c == '(' {
-                paren_open_count += 1;
+                paren_depth += 1;
             }
 
             if c == ')' {
-                paren_open_count -= 1;
+                paren_depth -= 1;
             }
 
-            if paren_open_count == 0 {
+            if paren_depth == 0 {
                 return false;
             }
         }
@@ -61,12 +61,12 @@ impl Formula {
             return Self::parse(&s[1..s.len() - 1]);
         }
 
-        let mut paren_open_count = 0;
+        let mut paren_depth = 0;
         let mut term = String::new();
         let mut terms = Vec::new();
 
         for c in s.chars() {
-            if vec!['+', '-'].contains(&c) && paren_open_count == 0 {
+            if vec!['+', '-'].contains(&c) && paren_depth == 0 {
                 terms.push(term);
                 term = String::new();
 
@@ -79,22 +79,22 @@ impl Formula {
 
             if c == ')' {
                 // close paren before open
-                if paren_open_count == 0 {
+                if paren_depth == 0 {
                     println!("Add: close paren before open => {:?}", s);
                     return Err(ParseFormulaError);
                 }
 
-                paren_open_count -= 1;
+                paren_depth -= 1;
             }
 
             if c == '(' {
-                paren_open_count += 1;
+                paren_depth += 1;
             }
 
             term.push(c);
             println!(
-                "Add: c => {:?}, term => {:?}, paren_open_count => {:?}",
-                c, term, paren_open_count
+                "Add: c => {:?}, term => {:?}, paren_depth => {:?}",
+                c, term, paren_depth
             );
         }
 
@@ -104,7 +104,7 @@ impl Formula {
         }
 
         // some paren has not closed
-        if paren_open_count != 0 {
+        if paren_depth != 0 {
             println!("Add: some paren has not closed => {:?}", s);
             return Err(ParseFormulaError);
         }
@@ -151,12 +151,12 @@ impl Formula {
             return Self::parse(&s[1..s.len() - 1]);
         }
 
-        let mut paren_open_count = 0;
+        let mut paren_depth = 0;
         let mut term = String::new();
         let mut terms = Vec::new();
 
         for c in s.chars() {
-            if c == '*' && paren_open_count == 0 {
+            if c == '*' && paren_depth == 0 {
                 terms.push(term);
                 term = String::new();
                 continue;
@@ -164,22 +164,22 @@ impl Formula {
 
             if c == ')' {
                 // close paren before open
-                if paren_open_count == 0 {
+                if paren_depth == 0 {
                     println!("Mul: close paren before open => {:?}", s);
                     return Err(ParseFormulaError);
                 }
 
-                paren_open_count -= 1;
+                paren_depth -= 1;
             }
 
             if c == '(' {
-                paren_open_count += 1;
+                paren_depth += 1;
             }
 
             term.push(c);
             println!(
-                "Mul: c => {:?}, term => {:?}, paren_open_count => {:?}",
-                c, term, paren_open_count
+                "Mul: c => {:?}, term => {:?}, paren_depth => {:?}",
+                c, term, paren_depth
             );
         }
 
@@ -189,7 +189,7 @@ impl Formula {
         }
 
         // some paren has not closed
-        if paren_open_count != 0 {
+        if paren_depth != 0 {
             println!("Mul: some paren has not closed => {:?}", s);
             return Err(ParseFormulaError);
         }
