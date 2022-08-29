@@ -1,5 +1,17 @@
 # latex-equivalencer #
 
+## Use CLI ##
+
+```console
+$ cargo run 'x y + z' 'y x + z'
+```
+
+If use `--release` target:
+
+```console
+$ cargo run --release 'x y + z' 'y x + z'
+```
+
 ## Debug by Evcxr ##
 
 You can debug by [Evcxr Rust REPL](https://github.com/google/evcxr/blob/main/evcxr_repl/README.md).
