@@ -9,8 +9,6 @@ use errors::ParseFormulaError;
 use formula::Formula;
 
 pub fn exec(lhs: &str, rhs: &str) -> Result<bool, ParseFormulaError> {
-    logger::init();
-
     let lhs_formula = Formula::parse(lhs)?;
     let rhs_formula = Formula::parse(rhs)?;
     debug!(
