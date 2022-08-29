@@ -31,3 +31,9 @@ $ cargo clippy --all-targets --all-features -- -D warnings -A clippy::needless_r
 ```console
 $ cargo fmt --all -- --check
 ```
+
+## Check all ##
+
+```console
+$ ./check.sh
+```
