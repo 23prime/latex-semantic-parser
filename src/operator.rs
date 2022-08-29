@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::errors::ParseFormulaError;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operator {
     Add,
 }
