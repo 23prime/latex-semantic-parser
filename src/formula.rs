@@ -8,10 +8,11 @@ use crate::errors::ParseFormulaError;
 
 #[derive(Debug, Clone, Eq, PartialOrd, Ord)]
 pub enum Formula {
-    TS(String), // TerminalSymbol
-    Neg(Box<Formula>),
-    Add(Vec<Formula>),
-    Mul(Vec<Formula>),
+    TS(String),          // Terminal Symbol
+    Neg(Box<Formula>),   // Negative Number
+    Recip(Box<Formula>), // Reciprocal Number
+    Add(Vec<Formula>),   // Addition
+    Mul(Vec<Formula>),   // Multiplication
     Empty,
 }
 
@@ -157,9 +158,15 @@ impl Formula {
         let mut terms = Vec::new();
 
         for c in s.chars() {
-            if c == '*' && paren_depth == 0 {
+            if vec!['*', '/'].contains(&c) && paren_depth == 0 {
+                // if c == '*' && paren_depth == 0 {
                 terms.push(term);
                 term = String::new();
+
+                if c == '/' {
+                    term.push(c)
+                }
+
                 continue;
             }
 
@@ -206,12 +213,16 @@ impl Formula {
         }
 
         if terms.len() == 1 {
-            // for abbreviate
-            if terms[0].len() > 1 {
-                terms = terms[0].split("").map(|s| s.trim().to_string()).collect_vec();
-            } else {
+            if terms[0].starts_with('/') {
+                return Ok(Self::Recip(Box::new(Self::parse_by_mul(terms[0][1..].trim())?)));
+            }
+
+            if terms[0].len() <= 1 {
                 return Ok(Formula::TS(terms[0].to_string()));
             }
+
+            // for abbreviate
+            terms = terms[0].split("").map(|s| s.trim().to_string()).collect_vec();
         }
 
         let result_iter = terms.into_iter().map(|s| Self::parse(&s));
@@ -290,11 +301,24 @@ impl Formula {
 
             // prod(l_formulas) == prod(r_formulas)
             (Self::Mul(l_formulas), Self::Mul(r_formulas)) => {
-                l_formulas.iter().sorted().collect_vec() == r_formulas.iter().sorted().collect_vec()
+                l_formulas
+                    .iter()
+                    // Exclude multiplication by 1
+                    .filter(|&f| f != &Self::TS("1".to_string()))
+                    .sorted()
+                    .collect_vec()
+                    == r_formulas
+                        .iter()
+                        .filter(|&f| f != &Self::TS("1".to_string()))
+                        .sorted()
+                        .collect_vec()
             }
 
             // - l == - r
             (Self::Neg(l_formula), Self::Neg(r_formula)) => l_formula == r_formula,
+
+            // 1 / l == 1 / r
+            (Self::Recip(l_formula), Self::Recip(r_formula)) => l_formula == r_formula,
 
             // Empty
             (Self::Empty, Self::Empty) => true,
@@ -330,6 +354,10 @@ mod tests {
 
     fn neg(formula: Formula) -> Formula {
         return Neg(Box::new(formula));
+    }
+
+    fn recip(formula: Formula) -> Formula {
+        return Recip(Box::new(formula));
     }
 
     #[cfg(test)]
@@ -463,6 +491,36 @@ mod tests {
             let expect = Mul(vec![ts("x"), ts("1")]);
             assert!(Formula::eq_without_expand(&input_no_spaces, &expect));
             assert!(Formula::eq_without_expand(&input_many_spaces, &expect));
+        }
+
+        #[test]
+        fn recip_term_test() {
+            let input = Formula::parse("1 / x").unwrap();
+            let expect = Mul(vec![ts("1"), recip(ts("x"))]);
+            // TODO: Simplify
+            // let expect = recip(ts("x"));
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn recip_2_terms_test() {
+            let input = Formula::parse("x / y").unwrap();
+            let expect = Mul(vec![ts("x"), recip(ts("y"))]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn recip_3_terms_test() {
+            let input = Formula::parse("x / y / z").unwrap();
+            let expect = Mul(vec![ts("x"), recip(ts("y")), recip(ts("z"))]);
+            assert!(Formula::eq_without_expand(&input, &expect));
+        }
+
+        #[test]
+        fn mul_recip_mixed_test() {
+            let input = Formula::parse("x * y / z").unwrap();
+            let expect = Mul(vec![ts("x"), ts("y"), recip(ts("z"))]);
+            assert!(Formula::eq_without_expand(&input, &expect));
         }
 
         #[test]

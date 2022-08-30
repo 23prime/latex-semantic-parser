@@ -206,4 +206,35 @@ mod tests {
         assert!(exec("2 * x + 3 * y + 1", "2 * x + 3 * y + 1").unwrap());
         assert!(exec("2 * x + 3 * y + 1", "3 * y + 2 * x + 1").unwrap());
     }
+
+    #[test]
+    fn div_test() {
+        assert!(exec("x / 1", "x / 1").unwrap());
+        assert!(exec("x / 1", "(x / 1)").unwrap());
+        assert!(exec("x / 1", "(x) / (1)").unwrap());
+        assert!(exec("x / 1", "((x) / (1))").unwrap());
+        assert!(exec("1 / x / y", "1 / x / y").unwrap());
+        assert!(exec("1 / x / y", "(1 / x / y)").unwrap());
+        assert!(exec("1 / x / y", "(1) / (x) / (y)").unwrap());
+        assert!(exec("1 / x / y", "((1) / (x)) / (y)").unwrap());
+    }
+
+    #[test]
+    fn div_falsy_test() {
+        assert!(!exec("1 / x / y", "1 / (x / y)").unwrap());
+        assert!(!exec("1 / x / y", "(1 / (x / y))").unwrap());
+        assert!(!exec("1 / x", "2 / x").unwrap());
+        assert!(!exec("x - y - 1", "x - y - 2").unwrap());
+    }
+
+    #[test]
+    fn div_commutative_test() {
+        assert!(exec("1 / x / y", "1 / y / x").unwrap());
+    }
+
+    #[test]
+    fn div_trim_test() {
+        assert!(exec("1 / x", " 1  /  x ").unwrap());
+        assert!(exec("1 / x", "1/x").unwrap());
+    }
 }
