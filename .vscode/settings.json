@@ -10,5 +10,8 @@
         "--",
         "-A",
         "clippy::needless_return"
-    ]
+    ],
+
+    // Spell Checker
+    "cSpell.words": ["Recip"]
 }
